@@ -2,15 +2,30 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Diagramium</title>
-    <script type="module" crossorigin src="/diagramium/assets/index-CBzhbbaC.js"></script>
-    <link rel="modulepreload" crossorigin href="/diagramium/assets/mermaid-BAZnI4Ff.js">
-    <link rel="stylesheet" crossorigin href="/diagramium/assets/index-CueI94Px.css">
+    <script type="module" crossorigin src="/diagramium/assets/index-BVhaFdPh.js"></script>
+    <link rel="modulepreload" crossorigin href="/diagramium/assets/mermaid-BX4UPBNI.js">
+    <link rel="stylesheet" crossorigin href="/diagramium/assets/index-D9a_SxUj.css">
   </head>
   <body style="margin:0;min-height:100vh;background:#0d0d0d;color:#e5e5e5;font-family:system-ui,sans-serif;">
     <div id="root" style="min-height:100vh;display:flex;flex-direction:column;">
       <noscript>Enable JavaScript to run Diagramium.</noscript>
     </div>
+    <script>
+      (function() {
+        var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent || '');
+        if (!isMobile) return;
+        document.addEventListener('touchmove', function(e) {
+          if (e.touches.length < 2) return;
+          var el = e.target;
+          while (el && el !== document.body) {
+            if (el.classList && el.classList.contains('diagram-content')) return;
+            el = el.parentElement;
+          }
+          e.preventDefault();
+        }, { passive: false });
+      })();
+    </script>
   </body>
 </html>
