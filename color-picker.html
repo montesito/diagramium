@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pick color</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 20px; background: #141414; color: #e5e5e5; font: 13px system-ui, sans-serif; }
+    h2 { margin: 0 0 16px; font-size: 14px; font-weight: 600; }
+    .grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; max-height: 140px; overflow-y: auto; margin-bottom: 16px; }
+    .swatch { width: 24px; height: 24px; min-width: 24px; min-height: 24px; padding: 0; border: 1px solid #262626; border-radius: 6px; cursor: pointer; }
+    .swatch.selected { border-color: #3b82f6; border-width: 2px; }
+    .row { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+    .row label { color: #737373; width: 32px; flex-shrink: 0; }
+    .row input[type="text"] { flex: 1; padding: 8px 10px; border: 1px solid #262626; border-radius: 6px; background: #0d0d0d; color: #e5e5e5; font-size: 13px; }
+    .btns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+    button { padding: 8px 14px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+    .cancel { border: 1px solid #262626; background: transparent; color: #e5e5e5; }
+    .done { border: none; background: #3b82f6; color: #fff; }
+    .none { border: 1px solid #262626; background: transparent; color: #e5e5e5; align-self: flex-start; margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+  <h2 id="title">Pick color</h2>
+  <div class="grid" id="grid"></div>
+  <div class="row">
+    <label>Hex</label>
+    <input type="text" id="hex" placeholder="#000000" />
+  </div>
+  <button type="button" class="none" id="btnNone" style="display:none">None (transparent)</button>
+  <div class="btns">
+    <button type="button" class="cancel" id="cancel">Cancel</button>
+    <button type="button" class="done" id="done">Done</button>
+  </div>
+  <script>
+    var PRESET = ['#141414','#1a1a1a','#262626','#404040','#525252','#737373','#a3a3a3','#d4d4d4','#e5e5e5','#ffffff','#3b82f6','#2563eb','#1d4ed8','#60a5fa','#93c5fd','#1e3a8a','#1e40af','#22c55e','#16a34a','#15803d','#4ade80','#86efac','#14532d','#166534','#e11d48','#b91c1c','#dc2626','#f87171','#fca5a5','#7f1d1d','#991b1b','#a855f7','#7c3aed','#6d28d9','#c084fc','#d8b4fe','#4c1d95','#5b21b6','#f59e0b','#d97706','#b45309','#fbbf24','#fcd34d','#78350f','#92400e','#06b6d4','#0891b2','#0e7490','#22d3ee','#67e8f9','#164e63','#155e75'];
+    var labels = { panelBg: 'Panel background', borderColor: 'Border color', svgBg: 'SVG background', nodeFill: 'Node fill', nodeText: 'Node text', lineColor: 'Lines / arrows' };
+    var params = new URLSearchParams(location.search);
+    var field = params.get('field') || 'panelBg';
+    var value = params.get('value') || '#141414';
+    if (value === 'transparent') value = '#141414';
+
+    document.getElementById('title').textContent = labels[field] || field;
+    if (field === 'panelBg') document.getElementById('btnNone').style.display = 'block';
+
+    var grid = document.getElementById('grid');
+    PRESET.forEach(function(hex) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'swatch' + (value.toLowerCase() === hex ? ' selected' : '');
+      btn.style.background = hex;
+      btn.title = hex;
+      btn.addEventListener('click', function() { value = hex; updateSwatches(); hexInput.value = hex; });
+      grid.appendChild(btn);
+    });
+    function updateSwatches() {
+      grid.querySelectorAll('.swatch').forEach(function(btn, i) {
+        btn.className = 'swatch' + (value.toLowerCase() === PRESET[i] ? ' selected' : '');
+      });
+    }
+
+    var hexInput = document.getElementById('hex');
+    hexInput.value = value;
+    hexInput.addEventListener('input', function() {
+      var v = this.value;
+      if (v === '' || /^#[0-9A-Fa-f]{0,6}$/.test(v) || /^[0-9A-Fa-f]{0,6}$/.test(v)) value = v.startsWith('#') ? v : v ? '#' + v : '#000000';
+    });
+
+    document.getElementById('btnNone').addEventListener('click', function() {
+      if (window.opener) window.opener.postMessage({ type: 'diagram-color', field: field, value: 'transparent' }, '*');
+      window.close();
+    });
+    document.getElementById('cancel').addEventListener('click', function() { window.close(); });
+    document.getElementById('done').addEventListener('click', function() {
+      var v = /^#[0-9A-Fa-f]{6}$/.test(value) ? value : '#141414';
+      if (window.opener) window.opener.postMessage({ type: 'diagram-color', field: field, value: v }, '*');
+      window.close();
+    });
+  </script>
+</body>
+</html>

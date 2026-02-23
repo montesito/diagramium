@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+  <rect width="32" height="32" rx="8" fill="#0f172a"/>
+  <!-- Three blocks, flow left to right, same vibe colors -->
+  <rect x="4" y="12" width="8" height="8" rx="2" fill="#6366f1"/>
+  <rect x="12" y="12" width="8" height="8" rx="2" fill="#f43f5e"/>
+  <rect x="20" y="12" width="8" height="8" rx="2" fill="#06b6d4"/>
+  <!-- Connector dots -->
+  <circle cx="12" cy="16" r="1" fill="#a5b4fc"/>
+  <circle cx="20" cy="16" r="1" fill="#fda4af"/>
+</svg>
