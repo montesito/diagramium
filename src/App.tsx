@@ -809,8 +809,19 @@ export function App() {
   const floatingPanelStyle: CSSProperties = {
     position: 'fixed',
     ...(isMobile
-      ? { left: 0, right: 0, top: 0, bottom: 0, width: '100%', maxWidth: '100%' }
-      : { left: 56, top: TOP_BAR_HEIGHT, bottom: 0, width: aboutOpen || syntaxOpen || savedOpen ? 320 : examplesOpen ? 300 : 320 }),
+      ? {
+          top: 'calc(env(safe-area-inset-top, 0px) + ' + (TOP_BAR_HEIGHT + 52) + 'px)',
+          left: '10vw',
+          right: '10vw',
+          maxWidth: 420,
+          bottom: 'max(env(safe-area-inset-bottom, 0px) + 8px, 8px)',
+        }
+      : {
+          left: 56,
+          top: TOP_BAR_HEIGHT,
+          bottom: 0,
+          width: aboutOpen || syntaxOpen || savedOpen ? 320 : examplesOpen ? 300 : 320,
+        }),
     zIndex: 50,
     background: 'var(--surface)',
     borderLeft: isMobile ? 'none' : '1px solid var(--border)',
@@ -880,37 +891,88 @@ export function App() {
       </div>,
       document.body
     )}
-    {isMobile && createPortal(
+    {isMobile && floatingBarExpanded && createPortal(
       <div
         style={{
           position: 'fixed',
-          bottom: 'max(12px, env(safe-area-inset-bottom, 0px))',
-          left: '50%',
-          transform: 'translateX(-50%)',
+          top: 'calc(env(safe-area-inset-top, 0px) + ' + (TOP_BAR_HEIGHT + 40) + 'px)',
+          right: 10,
           zIndex: 45,
           display: 'flex',
-          alignItems: 'center',
-          gap: 6,
-          padding: '8px 10px',
+          flexDirection: 'column',
+          alignItems: 'flex-end',
+          gap: 4,
+          padding: 6,
           background: 'var(--surface)',
           border: '1px solid var(--border)',
-          borderRadius: 28,
+          borderRadius: 10,
           boxShadow: '0 4px 20px rgba(0,0,0,0.35)',
         }}
       >
         {floatingBarExpanded ? (
           <>
-            <button type="button" onClick={() => { setFloatingBarExpanded(false); setAboutOpen(true); setExamplesOpen(false); setSavedOpen(false); setSyntaxOpen(false); setHowToOpen(false); }} title="About" aria-label="About" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44, padding: 0, border: 'none', borderRadius: '50%', background: 'transparent', color: 'var(--text)', cursor: 'pointer' }}><Info size={22} /></button>
-            <button type="button" onClick={() => { setFloatingBarExpanded(false); setExamplesOpen(true); setAboutOpen(false); setSavedOpen(false); setSyntaxOpen(false); setHowToOpen(false); }} title="Examples" aria-label="Examples" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44, padding: 0, border: 'none', borderRadius: '50%', background: 'transparent', color: 'var(--text)', cursor: 'pointer' }}><BookOpen size={22} /></button>
-            <button type="button" onClick={() => { setFloatingBarExpanded(false); setSavedOpen(true); setAboutOpen(false); setExamplesOpen(false); setSyntaxOpen(false); setHowToOpen(false); }} title="Saved & history" aria-label="Saved and history" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44, padding: 0, border: 'none', borderRadius: '50%', background: 'transparent', color: 'var(--text)', cursor: 'pointer' }}><Save size={22} /></button>
-            <button type="button" onClick={() => { setFloatingBarExpanded(false); setSyntaxOpen(true); setAboutOpen(false); setExamplesOpen(false); setSavedOpen(false); setHowToOpen(false); }} title="Syntax" aria-label="Syntax" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44, padding: 0, border: 'none', borderRadius: '50%', background: 'transparent', color: 'var(--text)', cursor: 'pointer' }}><FileCode size={22} /></button>
-            <button type="button" onClick={() => { setFloatingBarExpanded(false); setHowToOpen(true); setAboutOpen(false); setExamplesOpen(false); setSavedOpen(false); setSyntaxOpen(false); }} title="How to use" aria-label="How to use" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44, padding: 0, border: 'none', borderRadius: '50%', background: 'transparent', color: 'var(--text)', cursor: 'pointer' }}><HelpCircle size={22} /></button>
-            <span style={{ width: 1, height: 24, background: 'var(--border)', margin: '0 2px' }} aria-hidden="true" />
-            <button type="button" onClick={() => setFloatingBarExpanded(false)} title="Collapse" aria-label="Collapse bar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44, padding: 0, border: 'none', borderRadius: '50%', background: 'var(--bg)', color: 'var(--muted)', cursor: 'pointer' }}><ChevronDown size={20} /></button>
+            <button
+              type="button"
+              onClick={() => { setFloatingBarExpanded(false); setAboutOpen(true); setExamplesOpen(false); setSavedOpen(false); setSyntaxOpen(false); setHowToOpen(false); }}
+              title="About"
+              aria-label="About"
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8, padding: '4px 6px', border: 'none', background: 'transparent', color: 'var(--muted)', cursor: 'pointer', fontSize: 11 }}
+            >
+              <span>About</span>
+              <Info size={16} />
+            </button>
+            <button
+              type="button"
+              onClick={() => { setFloatingBarExpanded(false); setExamplesOpen(true); setAboutOpen(false); setSavedOpen(false); setSyntaxOpen(false); setHowToOpen(false); }}
+              title="Examples"
+              aria-label="Examples"
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8, padding: '4px 6px', border: 'none', background: 'transparent', color: 'var(--muted)', cursor: 'pointer', fontSize: 11 }}
+            >
+              <span>Examples</span>
+              <BookOpen size={16} />
+            </button>
+            <button
+              type="button"
+              onClick={() => { setFloatingBarExpanded(false); setSavedOpen(true); setAboutOpen(false); setExamplesOpen(false); setSyntaxOpen(false); setHowToOpen(false); }}
+              title="Saved & history"
+              aria-label="Saved and history"
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8, padding: '4px 6px', border: 'none', background: 'transparent', color: 'var(--muted)', cursor: 'pointer', fontSize: 11 }}
+            >
+              <span>Saved</span>
+              <Save size={16} />
+            </button>
+            <button
+              type="button"
+              onClick={() => { setFloatingBarExpanded(false); setSyntaxOpen(true); setAboutOpen(false); setExamplesOpen(false); setSavedOpen(false); setHowToOpen(false); }}
+              title="Syntax"
+              aria-label="Syntax"
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8, padding: '4px 6px', border: 'none', background: 'transparent', color: 'var(--muted)', cursor: 'pointer', fontSize: 11 }}
+            >
+              <span>Syntax</span>
+              <FileCode size={16} />
+            </button>
+            <button
+              type="button"
+              onClick={() => { setFloatingBarExpanded(false); setHowToOpen(true); setAboutOpen(false); setExamplesOpen(false); setSavedOpen(false); setSyntaxOpen(false); }}
+              title="How to use"
+              aria-label="How to use"
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8, padding: '4px 6px', border: 'none', background: 'transparent', color: 'var(--muted)', cursor: 'pointer', fontSize: 11 }}
+            >
+              <span>How to</span>
+              <HelpCircle size={16} />
+            </button>
+            <span style={{ width: '100%', height: 1, background: 'var(--border)', margin: '4px 0' }} aria-hidden="true" />
+            <button
+              type="button"
+              onClick={() => setFloatingBarExpanded(false)}
+              title="Collapse"
+              aria-label="Collapse bar"
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px 6px', border: 'none', background: 'transparent', color: 'var(--muted)', cursor: 'pointer', fontSize: 11 }}
+            >
+              <ChevronUp size={14} />
+            </button>
           </>
-        ) : (
-          <button type="button" onClick={() => setFloatingBarExpanded(true)} title="Panels" aria-label="Open panels" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 40, height: 40, padding: 0, border: 'none', borderRadius: 8, background: 'transparent', color: 'var(--muted)', cursor: 'pointer' }}><Menu size={20} /></button>
-        )}
+        ) : null}
       </div>,
       document.body
     )}
@@ -1409,6 +1471,188 @@ export function App() {
       )),
       document.body
     )}
+    {/* Mobile header toolbox below top bar */}
+    {isMobile && createPortal(
+      <div
+        style={{
+          position: 'fixed',
+          top: 'calc(env(safe-area-inset-top, 0px) + ' + TOP_BAR_HEIGHT + 'px)',
+          left: 0,
+          right: 0,
+          zIndex: 2147483600,
+          background: 'var(--surface)',
+          borderBottom: '1px solid var(--border)',
+          boxShadow: '0 2px 12px rgba(0,0,0,0.35)',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+            padding: '6px 8px',
+          }}
+        >
+          {previewFullscreen ? (
+            <button
+              type="button"
+              onClick={() => setPreviewFullscreen(false)}
+              title="Exit fullscreen preview"
+              aria-label="Exit fullscreen preview"
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, padding: 0, border: 'none', background: 'transparent', color: 'var(--muted)', cursor: 'pointer', borderRadius: 4 }}
+            >
+              <Minimize2 size={16} />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setPreviewFullscreen(true)}
+              title="Fullscreen preview"
+              aria-label="Fullscreen preview"
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, padding: 0, border: 'none', background: 'transparent', color: 'var(--muted)', cursor: 'pointer', borderRadius: 4 }}
+            >
+              <Maximize2 size={16} />
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={undo}
+            disabled={!canUndo}
+            title="Undo (Ctrl+Z)"
+            aria-label="Undo"
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, padding: 0, border: 'none', background: 'transparent', color: 'var(--muted)', cursor: canUndo ? 'pointer' : 'default', borderRadius: 4, opacity: canUndo ? 1 : 0.5 }}
+          >
+            <Undo2 size={16} />
+          </button>
+          <button
+            type="button"
+            onClick={redo}
+            disabled={!canRedo}
+            title="Redo (Ctrl+Y)"
+            aria-label="Redo"
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, padding: 0, border: 'none', background: 'transparent', color: 'var(--muted)', cursor: canRedo ? 'pointer' : 'default', borderRadius: 4, opacity: canRedo ? 1 : 0.5 }}
+          >
+            <Redo2 size={16} />
+          </button>
+          <button
+            ref={resetTriggerRef}
+            type="button"
+            onClick={handleResetAll}
+            title="Reset editor and diagram"
+            aria-label="Reset editor and diagram"
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, padding: 0, border: 'none', background: 'transparent', color: 'var(--muted)', cursor: 'pointer', borderRadius: 4 }}
+          >
+            <Trash2 size={16} />
+          </button>
+          <div ref={exportRef} style={{ position: 'relative' }}>
+            <button
+              type="button"
+              onClick={() => setExportOpen((o) => !o)}
+              disabled={!displaySvg}
+              title="Export"
+              aria-label="Export"
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, padding: 0, border: 'none', background: 'transparent', color: 'var(--muted)', cursor: displaySvg ? 'pointer' : 'not-allowed', borderRadius: 4, opacity: displaySvg ? 1 : 0.5 }}
+            >
+              <Download size={16} />
+            </button>
+            {exportOpen && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '100%',
+                  right: 0,
+                  marginTop: 4,
+                  background: 'var(--surface)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 8,
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+                  zIndex: 100,
+                  padding: 4,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 2,
+                  minWidth: 180,
+                }}
+              >
+                <button type="button" onClick={handleExportSvg} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', border: 'none', borderRadius: 6, background: 'transparent', color: 'var(--text)', cursor: 'pointer', fontSize: 12 }} title="Download SVG">
+                  <FileImage size={16} /> SVG
+                </button>
+                <button type="button" onClick={() => handleExportPng(2)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', border: 'none', borderRadius: 6, background: 'transparent', color: 'var(--text)', cursor: 'pointer', fontSize: 12 }} title="Download PNG (2x)">
+                  <Image size={16} /> PNG (2x)
+                </button>
+                <button type="button" onClick={() => handleExportPng(1)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', border: 'none', borderRadius: 6, background: 'transparent', color: 'var(--text)', cursor: 'pointer', fontSize: 12 }} title="Download PNG (1x)">
+                  PNG (1x)
+                </button>
+                <button type="button" onClick={handleExportMarkdown} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', border: 'none', borderRadius: 6, background: 'transparent', color: 'var(--text)', cursor: 'pointer', fontSize: 12 }} title="Save as Markdown file">
+                  Save as .md
+                </button>
+                <button type="button" onClick={handleExportMmd} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', border: 'none', borderRadius: 6, background: 'transparent', color: 'var(--text)', cursor: 'pointer', fontSize: 12 }} title="Save as Mermaid file">
+                  Save as .mmd
+                </button>
+                <button type="button" onClick={handlePrint} disabled={!displaySvg} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', border: 'none', borderRadius: 6, background: 'transparent', color: 'var(--text)', cursor: displaySvg ? 'pointer' : 'not-allowed', fontSize: 12, opacity: displaySvg ? 1 : 0.6 }} title="Print or Save as PDF">
+                  <Printer size={16} /> Print / PDF
+                </button>
+                <button type="button" onClick={handleCopyPng} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', border: 'none', borderRadius: 6, background: 'transparent', color: 'var(--text)', cursor: 'pointer', fontSize: 12 }} title="Copy as image">
+                  <Copy size={16} /> Copy image
+                </button>
+                <span style={{ height: 1, background: 'var(--border)', margin: '2px 0' }} />
+                <button type="button" onClick={handleCopyCode} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', border: 'none', borderRadius: 6, background: 'transparent', color: 'var(--text)', cursor: 'pointer', fontSize: 12 }} title="Copy Mermaid code">
+                  <Copy size={16} /> Copy code
+                </button>
+                <button type="button" onClick={handleCopyMarkdown} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', border: 'none', borderRadius: 6, background: 'transparent', color: 'var(--text)', cursor: 'pointer', fontSize: 12 }} title="Copy as Markdown block">
+                  Copy as Markdown
+                </button>
+                <button type="button" onClick={handleCopyLink} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', border: 'none', borderRadius: 6, background: 'transparent', color: 'var(--text)', cursor: 'pointer', fontSize: 12 }} title="Copy shareable link">
+                  <Link2 size={16} /> Copy link
+                </button>
+                <span style={{ height: 1, background: 'var(--border)', margin: '2px 0' }} />
+                <button type="button" onClick={handleImportFile} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', border: 'none', borderRadius: 6, background: 'transparent', color: 'var(--text)', cursor: 'pointer', fontSize: 12 }} title="Import from file">
+                  <Upload size={16} /> Import file
+                </button>
+              </div>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => setDarkMode((d) => !d)}
+            title={darkMode ? 'Light mode' : 'Dark mode'}
+            aria-label={darkMode ? 'Light mode' : 'Dark mode'}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, padding: 0, border: 'none', background: 'transparent', color: 'var(--muted)', cursor: 'pointer', borderRadius: 4 }}
+          >
+            {darkMode ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
+          <button
+            type="button"
+            onClick={() => setFloatingBarExpanded((o) => !o)}
+            title="Panels"
+            aria-label="Panels"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 6,
+              padding: '0 14px',
+              height: 30,
+              border: '1px solid var(--border)',
+              background: 'transparent',
+              color: 'var(--muted)',
+              cursor: 'pointer',
+              borderRadius: 999,
+              marginLeft: 'auto',
+              fontSize: 11,
+              fontWeight: 500,
+            }}
+          >
+            <Menu size={15} />
+            <span>Panels</span>
+          </button>
+        </div>
+      </div>,
+      document.body
+    )}
+
     {/* Top bar fixed above content */}
     {createPortal(
       <div
@@ -1439,49 +1683,10 @@ export function App() {
           <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--text)' }}>{APP_NAME}</span>
         </div>
         {isMobile ? (
-        <>
-        <div className="diagramium-top-bar-icons" style={{ flex: 1, minWidth: 0, overflowX: 'auto', overflowY: 'hidden', marginLeft: 8 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'nowrap', width: 'max-content' }}>
-          {previewFullscreen ? (
-            <button type="button" onClick={() => setPreviewFullscreen(false)} title="Exit fullscreen preview" aria-label="Exit fullscreen preview" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, padding: 0, border: 'none', background: 'transparent', color: 'var(--muted)', cursor: 'pointer', borderRadius: 4 }}><Minimize2 size={14} /></button>
-          ) : (
-            <button type="button" onClick={() => setPreviewFullscreen(true)} title="Fullscreen preview" aria-label="Fullscreen preview" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, padding: 0, border: 'none', background: 'transparent', color: 'var(--muted)', cursor: 'pointer', borderRadius: 4 }}><Maximize2 size={14} /></button>
-          )}
-          <button type="button" onClick={undo} disabled={!canUndo} title="Undo (Ctrl+Z)" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, padding: 0, border: 'none', background: 'transparent', color: 'var(--muted)', cursor: canUndo ? 'pointer' : 'default', borderRadius: 4, opacity: canUndo ? 1 : 0.5 }} aria-label="Undo"><Undo2 size={14} /></button>
-          <button type="button" onClick={redo} disabled={!canRedo} title="Redo (Ctrl+Y)" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, padding: 0, border: 'none', background: 'transparent', color: 'var(--muted)', cursor: canRedo ? 'pointer' : 'default', borderRadius: 4, opacity: canRedo ? 1 : 0.5 }} aria-label="Redo"><Redo2 size={14} /></button>
-          <span style={{ width: 1, height: 16, background: 'var(--border)', flexShrink: 0 }} aria-hidden="true" />
-          <button ref={resetTriggerRef} type="button" onClick={handleResetAll} title="Reset editor and diagram" aria-label="Reset editor and diagram" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, padding: 0, border: 'none', background: 'transparent', color: 'var(--muted)', cursor: 'pointer', borderRadius: 4 }}><Trash2 size={14} /></button>
-          <span style={{ width: 1, height: 16, background: 'var(--border)', flexShrink: 0 }} aria-hidden="true" />
-          <div ref={exportRef} style={{ position: 'relative' }}>
-            <button type="button" onClick={() => setExportOpen((o) => !o)} disabled={!displaySvg} title="Export" aria-label="Export" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, padding: 0, border: 'none', background: 'transparent', color: 'var(--muted)', cursor: displaySvg ? 'pointer' : 'not-allowed', borderRadius: 4, opacity: displaySvg ? 1 : 0.5 }}><Download size={14} /></button>
-            {exportOpen && (
-              <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: 4, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, boxShadow: '0 8px 24px rgba(0,0,0,0.4)', zIndex: 100, padding: 4, display: 'flex', flexDirection: 'column', gap: 2, minWidth: 180 }}>
-                <button type="button" onClick={handleExportSvg} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', border: 'none', borderRadius: 6, background: 'transparent', color: 'var(--text)', cursor: 'pointer', fontSize: 12 }} title="Download SVG"><FileImage size={16} /> SVG</button>
-                <button type="button" onClick={() => handleExportPng(2)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', border: 'none', borderRadius: 6, background: 'transparent', color: 'var(--text)', cursor: 'pointer', fontSize: 12 }} title="Download PNG (2x)"><Image size={16} /> PNG (2x)</button>
-                <button type="button" onClick={() => handleExportPng(1)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', border: 'none', borderRadius: 6, background: 'transparent', color: 'var(--text)', cursor: 'pointer', fontSize: 12 }} title="Download PNG (1x)">PNG (1x)</button>
-                <button type="button" onClick={handleExportMarkdown} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', border: 'none', borderRadius: 6, background: 'transparent', color: 'var(--text)', cursor: 'pointer', fontSize: 12 }} title="Save as Markdown file">Save as .md</button>
-                <button type="button" onClick={handleExportMmd} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', border: 'none', borderRadius: 6, background: 'transparent', color: 'var(--text)', cursor: 'pointer', fontSize: 12 }} title="Save as Mermaid file">Save as .mmd</button>
-                <button type="button" onClick={handlePrint} disabled={!displaySvg} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', border: 'none', borderRadius: 6, background: 'transparent', color: 'var(--text)', cursor: displaySvg ? 'pointer' : 'not-allowed', fontSize: 12, opacity: displaySvg ? 1 : 0.6 }} title="Print or Save as PDF"><Printer size={16} /> Print / PDF</button>
-                <button type="button" onClick={handleCopyPng} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', border: 'none', borderRadius: 6, background: 'transparent', color: 'var(--text)', cursor: 'pointer', fontSize: 12 }} title="Copy as image"><Copy size={16} /> Copy image</button>
-                <span style={{ height: 1, background: 'var(--border)', margin: '2px 0' }} />
-                <button type="button" onClick={handleCopyCode} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', border: 'none', borderRadius: 6, background: 'transparent', color: 'var(--text)', cursor: 'pointer', fontSize: 12 }} title="Copy Mermaid code"><Copy size={16} /> Copy code</button>
-                <button type="button" onClick={handleCopyMarkdown} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', border: 'none', borderRadius: 6, background: 'transparent', color: 'var(--text)', cursor: 'pointer', fontSize: 12 }} title="Copy as Markdown block">Copy as Markdown</button>
-                <button type="button" onClick={handleCopyLink} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', border: 'none', borderRadius: 6, background: 'transparent', color: 'var(--text)', cursor: 'pointer', fontSize: 12 }} title="Copy shareable link"><Link2 size={16} /> Copy link</button>
-                <span style={{ height: 1, background: 'var(--border)', margin: '2px 0' }} />
-                <button type="button" onClick={handleImportFile} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', border: 'none', borderRadius: 6, background: 'transparent', color: 'var(--text)', cursor: 'pointer', fontSize: 12 }} title="Import from file"><Upload size={16} /> Import file</button>
-              </div>
-            )}
-          </div>
-          <span style={{ width: 1, height: 16, background: 'var(--border)', flexShrink: 0 }} aria-hidden="true" />
-          <button type="button" onClick={() => setDarkMode((d) => !d)} title={darkMode ? 'Light mode' : 'Dark mode'} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, padding: 0, border: 'none', background: 'transparent', color: 'var(--muted)', cursor: 'pointer', borderRadius: 4 }} aria-label={darkMode ? 'Light mode' : 'Dark mode'}>{darkMode ? <Sun size={14} /> : <Moon size={14} />}</button>
-          </div>
-        </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, marginLeft: 8 }}>
-          <span style={{ width: 1, height: 16, background: 'var(--border)', flexShrink: 0 }} aria-hidden="true" />
           <span style={{ fontSize: 11, color: 'var(--muted)' }}>Powered by Mermaid</span>
           <span style={{ fontSize: 12, color: 'var(--muted)' }}>v{APP_VERSION}</span>
         </div>
-        </>
         ) : (
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           {previewFullscreen ? (
