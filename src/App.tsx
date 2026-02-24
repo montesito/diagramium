@@ -43,7 +43,7 @@ import {
 } from 'lucide-react';
 import { useRender, type MermaidThemeOptions } from './useRender';
 import { useDiagram } from './DiagramContext';
-import { downloadSvg, downloadPng, copyPngToClipboard, downloadMarkdown, downloadMmd } from './export';
+import { downloadSvg, downloadPng, copyPngToClipboard, downloadMarkdown, downloadMmd, svgToPng } from './export';
 import { TEMPLATES, CATEGORY_ORDER, getCategory } from './templates';
 import { getDiagramType, suggestFilename, parseErrorLine } from './utils';
 
@@ -463,8 +463,22 @@ export function App() {
   const handleCopyPng = useCallback(async () => {
     if (!displaySvg) return;
     const ok = await copyPngToClipboard(displaySvg);
-    showToast(ok ? 'Copied image' : 'Copy failed');
-    if (ok) setExportOpen(false);
+    if (ok) {
+      showToast('Copied image');
+      setExportOpen(false);
+      return;
+    }
+    // Fallback especially for mobile: open PNG in new tab so user can long-press/copy/save
+    try {
+      const blob = await svgToPng(displaySvg, 2);
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      showToast('Opened image in new tab');
+      setExportOpen(false);
+      // URL will be revoked when tab is closed or by the browser GC
+    } catch {
+      showToast('Copy failed');
+    }
   }, [displaySvg, showToast]);
 
   const handleCopyMarkdown = useCallback(async () => {
@@ -1166,8 +1180,8 @@ export function App() {
                   position: 'absolute',
                   bottom: 12,
                   left: 12,
-                  zIndex: 20,
-                  padding: '8px 6px',
+                  zIndex: 40,
+                  padding: '6px 6px',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
@@ -1175,41 +1189,110 @@ export function App() {
                   background: 'var(--surface)',
                   border: '1px solid var(--border)',
                   borderRadius: 8,
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-                  ...(isMobile ? { paddingBottom: 'max(8px, env(safe-area-inset-bottom, 0px))' } : {}),
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
+                  ...(isMobile ? { paddingBottom: 'max(6px, env(safe-area-inset-bottom, 0px))' } : {}),
                 }}
               >
                 <div ref={appearanceRef} style={{ display: 'flex' }}>
-                  <button type="button" style={{ ...iconBtnStyle, minHeight: 36, minWidth: 36 }} onClick={() => setAppearanceOpen((o) => !o)} title="Diagram colors" aria-label="Diagram colors">
-                    <Palette size={18} />
+                  <button
+                    type="button"
+                    style={{ ...iconBtnStyle, minHeight: 32, minWidth: 32 }}
+                    onClick={() => setAppearanceOpen((o) => !o)}
+                    title="Diagram colors"
+                    aria-label="Diagram colors"
+                  >
+                    <Palette size={16} />
                   </button>
                 </div>
-                <button type="button" onClick={() => setShowGrid((g) => !g)} title={showGrid ? 'Hide grid' : 'Show grid'} style={{ ...iconBtnStyle, minHeight: 36, minWidth: 36, background: showGrid ? 'var(--accent)' : undefined, color: showGrid ? '#fff' : undefined }} aria-label="Toggle grid">
-                  <LayoutGrid size={18} />
+                <button
+                  type="button"
+                  onClick={() => setShowGrid((g) => !g)}
+                  title={showGrid ? 'Hide grid' : 'Show grid'}
+                  style={{
+                    ...iconBtnStyle,
+                    minHeight: 32,
+                    minWidth: 32,
+                    background: showGrid ? 'var(--accent)' : undefined,
+                    color: showGrid ? '#fff' : undefined,
+                  }}
+                  aria-label="Toggle grid"
+                >
+                  <LayoutGrid size={16} />
                 </button>
-                <button type="button" onClick={diagramCenter} title="Fit to view" aria-label="Fit" style={{ ...iconBtnStyle, minHeight: 36, minWidth: 36 }}>
-                  <Crosshair size={18} />
+                <button
+                  type="button"
+                  onClick={diagramCenter}
+                  title="Fit to view"
+                  aria-label="Fit"
+                  style={{ ...iconBtnStyle, minHeight: 32, minWidth: 32 }}
+                >
+                  <Crosshair size={16} />
                 </button>
-                <button type="button" onClick={() => setDiagramScale(1)} title="100%" style={{ ...iconBtnStyle, minHeight: 28, minWidth: 36, fontSize: 10 }}>100%</button>
-                <button type="button" onClick={diagramZoomIn} title="Zoom in" aria-label="Zoom in" style={{ ...iconBtnStyle, minHeight: 36, minWidth: 36 }}>
-                  <Plus size={18} />
+                <button
+                  type="button"
+                  onClick={() => setDiagramScale(1)}
+                  title="100%"
+                  style={{ ...iconBtnStyle, minHeight: 26, minWidth: 34, fontSize: 10 }}
+                >
+                  100%
                 </button>
-                <span style={{ minWidth: 36, textAlign: 'center', fontSize: 10, color: 'var(--muted)' }} title="Zoom">{Math.round(diagramScale * 100)}%</span>
-                <button type="button" onClick={diagramZoomOut} title="Zoom out" aria-label="Zoom out" style={{ ...iconBtnStyle, minHeight: 36, minWidth: 36 }}>
-                  <Minus size={18} />
+                <button
+                  type="button"
+                  onClick={diagramZoomIn}
+                  title="Zoom in"
+                  aria-label="Zoom in"
+                  style={{ ...iconBtnStyle, minHeight: 32, minWidth: 32 }}
+                >
+                  <Plus size={16} />
                 </button>
-                <span style={{ width: 20, height: 1, background: 'var(--border)' }} />
-                <button type="button" onClick={() => diagramPan(0, -PAN_STEP)} title="Pan up" aria-label="Pan up" style={{ ...iconBtnStyle, minHeight: 36, minWidth: 36 }}>
-                  <ChevronUp size={18} />
+                <span style={{ minWidth: 34, textAlign: 'center', fontSize: 10, color: 'var(--muted)' }} title="Zoom">
+                  {Math.round(diagramScale * 100)}%
+                </span>
+                <button
+                  type="button"
+                  onClick={diagramZoomOut}
+                  title="Zoom out"
+                  aria-label="Zoom out"
+                  style={{ ...iconBtnStyle, minHeight: 32, minWidth: 32 }}
+                >
+                  <Minus size={16} />
                 </button>
-                <button type="button" onClick={() => diagramPan(PAN_STEP, 0)} title="Pan right" aria-label="Pan right" style={{ ...iconBtnStyle, minHeight: 36, minWidth: 36 }}>
-                  <ChevronRight size={18} />
+                <span style={{ width: 18, height: 1, background: 'var(--border)' }} />
+                <button
+                  type="button"
+                  onClick={() => diagramPan(0, -PAN_STEP)}
+                  title="Pan up"
+                  aria-label="Pan up"
+                  style={{ ...iconBtnStyle, minHeight: 32, minWidth: 32 }}
+                >
+                  <ChevronUp size={16} />
                 </button>
-                <button type="button" onClick={() => diagramPan(-PAN_STEP, 0)} title="Pan left" aria-label="Pan left" style={{ ...iconBtnStyle, minHeight: 36, minWidth: 36 }}>
-                  <ChevronLeft size={18} />
+                <button
+                  type="button"
+                  onClick={() => diagramPan(PAN_STEP, 0)}
+                  title="Pan right"
+                  aria-label="Pan right"
+                  style={{ ...iconBtnStyle, minHeight: 32, minWidth: 32 }}
+                >
+                  <ChevronRight size={16} />
                 </button>
-                <button type="button" onClick={() => diagramPan(0, PAN_STEP)} title="Pan down" aria-label="Pan down" style={{ ...iconBtnStyle, minHeight: 36, minWidth: 36 }}>
-                  <ChevronDown size={18} />
+                <button
+                  type="button"
+                  onClick={() => diagramPan(-PAN_STEP, 0)}
+                  title="Pan left"
+                  aria-label="Pan left"
+                  style={{ ...iconBtnStyle, minHeight: 32, minWidth: 32 }}
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => diagramPan(0, PAN_STEP)}
+                  title="Pan down"
+                  aria-label="Pan down"
+                  style={{ ...iconBtnStyle, minHeight: 32, minWidth: 32 }}
+                >
+                  <ChevronDown size={16} />
                 </button>
               </div>
             )}
