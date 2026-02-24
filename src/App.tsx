@@ -43,7 +43,7 @@ import {
 } from 'lucide-react';
 import { useRender, type MermaidThemeOptions } from './useRender';
 import { useDiagram } from './DiagramContext';
-import { downloadSvg, downloadPng, copyPngToClipboard, downloadMarkdown, downloadMmd, svgToPng } from './export';
+import { downloadSvg, downloadPng, downloadMarkdown, downloadMmd, svgToPng } from './export';
 import { TEMPLATES, CATEGORY_ORDER, getCategory } from './templates';
 import { getDiagramType, suggestFilename, parseErrorLine } from './utils';
 
@@ -462,23 +462,45 @@ export function App() {
 
   const handleCopyPng = useCallback(async () => {
     if (!displaySvg) return;
-    const ok = await copyPngToClipboard(displaySvg);
-    if (ok) {
-      showToast('Copied image');
-      setExportOpen(false);
-      return;
-    }
-    // Fallback especially for mobile: open PNG in new tab so user can long-press/copy/save
+    let blob: Blob;
     try {
-      const blob = await svgToPng(displaySvg, 2);
-      const url = URL.createObjectURL(blob);
-      window.open(url, '_blank');
-      showToast('Opened image in new tab');
-      setExportOpen(false);
-      // URL will be revoked when tab is closed or by the browser GC
+      blob = await svgToPng(displaySvg, 2);
     } catch {
       showToast('Copy failed');
+      return;
     }
+    // Prefer clipboard so user can paste anywhere
+    if (navigator.clipboard?.write) {
+      try {
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+        showToast('Copied image');
+        setExportOpen(false);
+        return;
+      } catch {
+        // Clipboard failed (common on iOS)
+      }
+    }
+    // Mobile fallback: Share sheet (save to Photos, share to app) or open in new tab to long-press copy
+    const file = new File([blob], 'diagram.png', { type: 'image/png' });
+    if (typeof navigator !== 'undefined' && navigator.share && navigator.canShare?.({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: 'Diagram' });
+        showToast('Shared');
+        setExportOpen(false);
+        return;
+      } catch (e) {
+        if ((e as Error).name === 'AbortError') return;
+      }
+    }
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(r.result as string);
+      r.onerror = reject;
+      r.readAsDataURL(blob);
+    });
+    window.open(dataUrl, '_blank');
+    showToast('Opened — long-press image to copy or save');
+    setExportOpen(false);
   }, [displaySvg, showToast]);
 
   const handleCopyMarkdown = useCallback(async () => {

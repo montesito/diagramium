@@ -145,15 +145,21 @@ export function svgToPng(svg: string, scale = 2): Promise<Blob> {
   });
 }
 
-/** Download diagram as PNG. */
+/** Download diagram as PNG. On mobile, opens PNG in new tab via data URL so it loads reliably. */
 export async function downloadPng(svg: string, filename = 'diagram.png', scale = 2) {
   const blob = await svgToPng(svg, scale);
-  const url = URL.createObjectURL(blob);
   if (isMobileDownloadEnv()) {
-    window.open(url, '_blank');
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(r.result as string);
+      r.onerror = reject;
+      r.readAsDataURL(blob);
+    });
+    window.open(dataUrl, '_blank');
   } else {
+    const url = URL.createObjectURL(blob);
     triggerDownload(url, filename);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 }
 
