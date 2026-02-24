@@ -392,7 +392,8 @@ export function App() {
   }, [displaySvg, code, showToast]);
 
   const handleExportPng = useCallback(async (scale: 1 | 2 = 2) => {
-    if (displaySvg) await downloadPng(displaySvg, suggestFilename(code, 'diagram') + '.png', scale);
+    const effectiveScale = scale === 2 ? 3 : 1.5;
+    if (displaySvg) await downloadPng(displaySvg, suggestFilename(code, 'diagram') + '.png', effectiveScale);
     setExportOpen(false);
     if (displaySvg) showToast('Downloaded PNG');
   }, [displaySvg, code, showToast]);

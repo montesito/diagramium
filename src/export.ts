@@ -9,6 +9,81 @@ function isMobileDownloadEnv(): boolean {
   return /iPhone|iPad|iPod|Android/i.test(ua);
 }
 
+/** Strip background rects and ensure SVG canvas matches diagram bounds with transparent background. */
+function makeSvgBackgroundTransparent(svg: string): string {
+  let out = svg;
+
+  // Remove Mermaid's full-canvas background rects
+  out = out.replace(/<rect[^>]+class="mermaid-svg-background"[^>]*>\s*<\/rect>/gi, '');
+  out = out.replace(/<rect[^>]+width="100%"[^>]+height="100%"[^>]*>\s*<\/rect>/gi, '');
+
+  // Normalize the <svg> tag so width/height match the viewBox and background is transparent.
+  const svgTagMatch = out.match(/<svg[^>]*>/i);
+  if (svgTagMatch) {
+    const originalTag = svgTagMatch[0];
+    let attrs = originalTag.replace(/^<svg/i, '').replace(/>$/,'');
+
+    // Extract viewBox if present
+    let vbWidth: string | null = null;
+    let vbHeight: string | null = null;
+    const viewBoxMatch = attrs.match(/viewBox="([^"]+)"/i);
+    if (viewBoxMatch) {
+      const parts = viewBoxMatch[1].trim().split(/\s+/);
+      if (parts.length === 4) {
+        vbWidth = parts[2];
+        vbHeight = parts[3];
+      }
+    }
+
+    // Fallback to width/height attributes if needed
+    if (!vbWidth || !vbHeight) {
+      const wMatch = attrs.match(/width="([^"]+)"/i);
+      const hMatch = attrs.match(/height="([^"]+)"/i);
+      if (wMatch && hMatch) {
+        vbWidth = wMatch[1];
+        vbHeight = hMatch[1];
+      }
+    }
+
+    // Force numeric width/height from viewBox so canvas tightly fits diagram
+    if (vbWidth && vbHeight) {
+      if (/width="[^"]*"/i.test(attrs)) {
+        attrs = attrs.replace(/width="[^"]*"/i, `width="${vbWidth}"`);
+      } else {
+        attrs += ` width="${vbWidth}"`;
+      }
+      if (/height="[^"]*"/i.test(attrs)) {
+        attrs = attrs.replace(/height="[^"]*"/i, `height="${vbHeight}"`);
+      } else {
+        attrs += ` height="${vbHeight}"`;
+      }
+    }
+
+    // Ensure aspect ratio centers diagram
+    if (!/preserveAspectRatio=/i.test(attrs)) {
+      attrs += ' preserveAspectRatio="xMidYMid meet"';
+    }
+
+    // Remove any background from style/fill on <svg> and make it transparent
+    if (/style="/i.test(attrs)) {
+      attrs = attrs.replace(/style="([^"]*)"/i, (_m: string, s: string) => {
+        const cleaned = s.replace(/background[^;"]*;?/gi, '').replace(/fill:[^;"]*;?/gi, '');
+        return `style="${cleaned} background-color: transparent;"`;
+      });
+    } else {
+      attrs += ' style="background-color: transparent;"';
+    }
+
+    // Drop fill attribute on <svg> if it exists (avoid solid bg)
+    attrs = attrs.replace(/\sfill="[^"]*"/gi, '');
+
+    const newTag = `<svg${attrs}>`;
+    out = out.replace(originalTag, newTag);
+  }
+
+  return out;
+}
+
 function triggerDownload(url: string, filename: string, revoke = true) {
   const a = document.createElement('a');
   a.href = url;
@@ -22,7 +97,8 @@ function triggerDownload(url: string, filename: string, revoke = true) {
 
 /** Trigger download of the diagram as an SVG file. */
 export function downloadSvg(svg: string, filename = 'diagram.svg') {
-  const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+  const cleaned = makeSvgBackgroundTransparent(svg);
+  const blob = new Blob([cleaned], { type: 'image/svg+xml;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   if (isMobileDownloadEnv()) {
     window.open(url, '_blank');
@@ -50,8 +126,6 @@ export function svgToPng(svg: string, scale = 2): Promise<Blob> {
         reject(new Error('Canvas context not available'));
         return;
       }
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, w, h);
       ctx.drawImage(img, 0, 0, w, h);
       canvas.toBlob(
         (b) => {
